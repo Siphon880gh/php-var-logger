@@ -1,6 +1,6 @@
 <?php
 /*!/////////////////////////
- * RAPID DEBUG (PHP ONLY)
+ * PHP VAR LOGGER
  * Debug in PHP with a simple syntax. Logs to a file so you aren't 
  * forced to break the website layout. Furthermore, AJAX calls
  * can easily be debugged.
@@ -15,13 +15,13 @@
 ////////////////////////////
 // SECTION 1: Optional Init
 
-$rdebug_filePtr = null;
-$rdebug_tab = "";
-$rdebug_utc_num = null;
+$varlogger_filePtr = null;
+$varlogger_tab = "";
+$varlogger_utc_num = null;
 
-function rdebug_utc($offset = null) {
+function varlogger_utc($offset = null) {
     if(is_null($offset)) $offset = isset($_COOKIE['UTC'])?intval($_COOKIE['UTC']):-8;
-    $rdebug_utc_num=$offset;
+    $varlogger_utc_num=$offset;
     /* At client side, you could:
        var nUTC=((new Date()).getTimezoneOffset() / -60);
        document.cookie = "UTC=" + nUTC + ";";
@@ -32,29 +32,29 @@ function rdebug_utc($offset = null) {
     date_default_timezone_set($timezone_name);
 }
 	
-function rdebug_new($fn="`RESULTS.log") {
-	global $rdebug_filePtr;
+function varlogger_new($fn="`RESULTS.log") {
+	global $varlogger_filePtr;
 	
 	//empty any existing file
-	$rdebug_filePtr = fopen($fn, "w");
-	fwrite($rdebug_filePtr, "");
-	fclose($rdebug_filePtr);
+	$varlogger_filePtr = fopen($fn, "w");
+	fwrite($varlogger_filePtr, "");
+	fclose($varlogger_filePtr);
 	
 	//start appending future logs
-	$rdebug_filePtr = fopen($fn, "a");
+	$varlogger_filePtr = fopen($fn, "a");
 }
 
-function rdebug_append($fn="RESULTS.log") {
-	global $rdebug_filePtr;
-	$rdebug_filePtr = fopen($fn, "a");
+function varlogger_append($fn="RESULTS.log") {
+	global $varlogger_filePtr;
+	$varlogger_filePtr = fopen($fn, "a");
 }
 
 ////////////////////////
 // SECTION 2: Functions
 
-function rdebug_stamp() {
-    global $rdebug_utc_num;
-    if(is_null($rdebug_utc_num)) rdebug_utc();
+function varlogger_stamp() {
+    global $varlogger_utc_num;
+    if(is_null($varlogger_utc_num)) varlogger_utc();
     $stamp="";
     $words = preg_split('//', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', -1);
     $nums = preg_split('//', '0123456789', -1);
@@ -70,12 +70,12 @@ function rdebug_stamp() {
     $stamp.= "\n";
     $strTime = date('m-d-Y g:i a');
     if($strTime) $stamp.=$strTime."\n";
-    rdebug($stamp);
-} // rdebug_stamp
+    varlogger($stamp);
+} // varlogger_stamp
 
-function rdebug($var, $strA=null, $strB=null, $strC=null) {
-	global $rdebug_filePtr, $rdebug_tab;
-    if($rdebug_filePtr==null) rdebug_new();
+function varlogger($var, $strA=null, $strB=null, $strC=null) {
+	global $varlogger_filePtr, $varlogger_tab;
+    if($varlogger_filePtr==null) varlogger_new();
 	$arr = array($strA, $strB, $strC);
     $str = "";
 	
@@ -87,7 +87,7 @@ function rdebug($var, $strA=null, $strB=null, $strC=null) {
 	try {
         $str .= $var;
     } catch (Exception $e) {
-        fwrite($rdebug_filePtr, "Rdebug: You passed an array into rdebug but it only takes in data types like string, boolean, int, float, etc that are not multidimensional. Consider using rdebug\'s var export by passing true as one of the parameters after the variable.\n");
+        fwrite($varlogger_filePtr, "varlogger: You passed an array into varlogger but it only takes in data types like string, boolean, int, float, etc that are not multidimensional. Consider using varlogger\'s var export by passing true as one of the parameters after the variable.\n");
     }
     
 	foreach($arr as $val) {
@@ -97,46 +97,46 @@ function rdebug($var, $strA=null, $strB=null, $strC=null) {
 		else if($val[strlen($val)-1]=='$') $str=$str." ".substr($val,0, strlen($val)-1);
 		else $str=$val." ".$str;
 	}
-	fwrite($rdebug_filePtr, $rdebug_tab . $str . "\n\n");
+	fwrite($varlogger_filePtr, $varlogger_tab . $str . "\n\n");
 }
 
-function rdebug_group($str) {
-    global $rdebug_tab, $rdebug_filePtr;
-    if($rdebug_filePtr==null) rdebug_new();
-    $rdebug_tab = "\t";
-    fwrite($rdebug_filePtr, "**" . $str . "**\n");
+function varlogger_group($str) {
+    global $varlogger_tab, $varlogger_filePtr;
+    if($varlogger_filePtr==null) varlogger_new();
+    $varlogger_tab = "\t";
+    fwrite($varlogger_filePtr, "**" . $str . "**\n");
 }
 
-function rdebug_groupEnd() {
-    global $rdebug_tab;
-    $rdebug_tab = "";
+function varlogger_groupEnd() {
+    global $varlogger_tab;
+    $varlogger_tab = "";
 }
 
-function rdebug_ajax() {
-    rdebug_group("Session Variables");
-        rdebug($_SESSION, "Session variables are:", true);
-    rdebug_groupEnd();
+function varlogger_ajax() {
+    varlogger_group("Session Variables");
+        varlogger($_SESSION, "Session variables are:", true);
+    varlogger_groupEnd();
     
-    rdebug_group("Get Parameters");
-        rdebug($_GET, "Get parameters are:", true);
-    rdebug_groupEnd();
+    varlogger_group("Get Parameters");
+        varlogger($_GET, "Get parameters are:", true);
+    varlogger_groupEnd();
     
-    rdebug_group("Post Parameters");
-        rdebug($_POST, "Post parameters are:", true);
-    rdebug_groupEnd();
+    varlogger_group("Post Parameters");
+        varlogger($_POST, "Post parameters are:", true);
+    varlogger_groupEnd();
     
-    rdebug_group("Put/Patch/Update/Delete Parameters");
+    varlogger_group("Put/Patch/Update/Delete Parameters");
     	$arr = array();
         if (($stream = fopen('php://input', "r")) !== FALSE) {
            $str_prm = stream_get_contents($stream);
            parse_str($str_prm, $arr);
         }
-        rdebug($arr, "These are the parameter(s):", true);
-    rdebug_groupEnd();
+        varlogger($arr, "These are the parameter(s):", true);
+    varlogger_groupEnd();
 
-} // rdebug_ajax
+} // varlogger_ajax
 
-function rdebug_vars() { // pass true to see console too
+function varlogger_vars() { // pass true to see console too
     $arr = $_SERVER; // which includes GET, POST, cookies
     if (($stream = fopen('php://input', "r")) !== FALSE) { // which includes PUT, PATCH, UPDATE, DELETE
         $arr_ = array();
@@ -165,16 +165,16 @@ function rdebug_vars() { // pass true to see console too
         }
     }
     
-    rdebug_group("Server variables, session variables, method parameters (eg. \$_POST[\"someVar\"]), global variables, and local variables");
-        rdebug($strQ, "To add spacing and tabs, validate the following text at JSON Lint (without the enclosing quotes):\n", true);
-    rdebug_groupEnd();
+    varlogger_group("Server variables, session variables, method parameters (eg. \$_POST[\"someVar\"]), global variables, and local variables");
+        varlogger($strQ, "To add spacing and tabs, validate the following text at JSON Lint (without the enclosing quotes):\n", true);
+    varlogger_groupEnd();
 }
 
-function rdebug_string_path() { // pass true to see console too
-    global $rdebug_filePtr;
-    $meta_data = stream_get_meta_data($rdebug_filePtr);
+function varlogger_string_path() { // pass true to see console too
+    global $varlogger_filePtr;
+    $meta_data = stream_get_meta_data($varlogger_filePtr);
     $filename = $meta_data["uri"];
-    $str ="RDEBUG: FROM " . "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" .  ", SAVE LOG AS " . $filename;
+    $str ="varlogger: FROM " . "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" .  ", SAVE LOG AS " . $filename;
     
     
     if(func_num_args()>0) {
